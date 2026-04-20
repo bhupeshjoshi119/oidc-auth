@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import express from "express";
 import path from "node:path";
 import { eq } from "drizzle-orm";
@@ -6,8 +5,15 @@ import JWT from "jsonwebtoken";
 import jose from "node-jose";
 import { db } from "./db";
 import { usersTable } from "./db/schema";
+import {
+  findApplicationByClientSecret,
+  validateAuthorizationCode,
+  createToken,
+  markCodeUsed,
+} from "./db/services";
 import { PRIVATE_KEY, PUBLIC_KEY } from "./utils/cert";
 import type { JWTClaims } from "./utils/user-token";
+import crypto from 'node:crypto';
 
 const app = express();
 const PORT = process.env.PORT ?? 8000;
@@ -21,7 +27,6 @@ app.get("/health", (req, res) =>
   res.json({ message: "Server is healthy", healthy: true }),
 );
 
-// OIDC Endpoints
 app.get("/.well-known/openid-configuration", (req, res) => {
   const ISSUER = `http://localhost:${PORT}`;
   return res.json({
@@ -29,7 +34,79 @@ app.get("/.well-known/openid-configuration", (req, res) => {
     authorization_endpoint: `${ISSUER}/o/authenticate`,
     userinfo_endpoint: `${ISSUER}/o/userinfo`,
     jwks_uri: `${ISSUER}/.well-known/jwks.json`,
+    token_endpoint:`${ISSUER}/o/tokeninfo`
   });
+});
+
+// GET /o/tokeninfo - Redirect to error page (POST only endpoint)
+app.get('/o/tokeninfo', (req, res) => {
+  const errorParams = new URLSearchParams({
+    error: 'method_not_allowed',
+    error_description: 'This endpoint only accepts POST requests',
+    status: '405'
+  });
+  return res.redirect(`/error.html?${errorParams.toString()}`);
+});
+
+// POST /o/tokeninfo - Token exchange endpoint
+app.post('/o/tokeninfo', async (req, res) => {
+  try {
+    const { code, client_secret } = req.body;
+
+    // client secret se application fetch kro
+    const application = await findApplicationByClientSecret(client_secret);
+    if (!application) {
+      return res.status(401).json({
+        error: 'invalid_client',
+        error_description: 'Invalid client_secret'
+      });
+    }
+
+    // code ko validate karo
+    const authCodeRecord = await validateAuthorizationCode(code, application.id);
+    if (!authCodeRecord) {
+      return res.status(400).json({
+        error: 'invalid_grant',
+        error_description: 'Invalid, expired, or already used authorization code'
+      });
+    }
+
+    // code jiss user ka hai uska access token refresh token
+    const userId = authCodeRecord.userId;
+
+    // Secure random tokens generate karo (OAuth best practice)
+    const access_token = crypto.randomBytes(32).toString('hex');
+    const refresh_token = crypto.randomBytes(64).toString('hex');  // refresh token thoda lamba rakhte hain
+    const expires_in = 3600;  // 1 hour (seconds mein) - aap apne hisaab se change kar sakte ho
+
+    // tokens ko database mein save karo (future refresh aur validation ke liye)
+    await createToken({
+      access_token,
+      refresh_token,
+      user_id: userId,
+      client_id: application.id,
+      expires_at: new Date(Date.now() + expires_in * 1000),
+      scope: authCodeRecord.scope || 'read write'   // agar scope tha toh save karo
+    });
+
+    // code ko used mark kar do (security - ek baar use ho gaya toh phir nahi chalega)
+    await markCodeUsed(code);
+
+    // final response (OAuth 2.0 standard format)
+    res.json({
+      access_token,
+      token_type: 'Bearer',
+      expires_in,
+      refresh_token
+    });
+
+  } catch (error) {
+    console.error('Token exchange error:', error);
+    res.status(500).json({
+      error: 'server_error',
+      error_description: 'Internal server error'
+    });
+  }
 });
 
 app.get("/.well-known/jwks.json", async (_, res) => {

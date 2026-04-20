@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Authentication Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .error-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 60px 40px;
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .error-code {
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            color: #718096;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .error-details {
+            background: #f7fafc;
+            border-left: 4px solid #ff6b6b;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .error-details p {
+            color: #4a5568;
+            font-size: 14px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .error-details strong {
+            color: #2d3748;
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f7fafc;
+            transform: translateY(-2px);
+        }
+
+        .error-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .error-footer p {
+            color: #a0aec0;
+            font-size: 13px;
+        }
+
+        .error-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .error-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .error-container {
+                padding: 40px 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .error-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 35px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Status specific styles */
+        .status-404 .error-icon {
+            background: #ff6b6b;
+        }
+
+        .status-405 .error-icon {
+            background: #ffa500;
+        }
+
+        .status-500 .error-icon {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container" id="errorContainer">
+        <div class="error-icon">⚠️</div>
+        <div class="error-code" id="errorCode">Error</div>
+        <h1 id="errorTitle">Something Went Wrong</h1>
+        <p class="error-message" id="errorMessage">
+            The requested resource could not be accessed.
+        </p>
+
+        <div class="error-details">
+            <strong>Error Details:</strong>
+            <p id="errorDetails">Please check the request and try again.</p>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="goHome()">← Back to Home</button>
+            <button class="btn btn-secondary" onclick="goLogin()">🔐 Go to Login</button>
+        </div>
+
+        <div class="error-footer">
+            <p>Need help? <a href="http://localhost:8000/o/authenticate">Visit Authentication Page</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Parse query parameters to customize error message
+        function getQueryParam(param) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(param);
+        }
+
+        function getQueryParams() {
+            const errorType = getQueryParam('error');
+            const errorDesc = getQueryParam('error_description');
+            const statusCode = getQueryParam('status') || '400';
+
+            return { errorType, errorDesc, statusCode };
+        }
+
+        function initializeErrorPage() {
+            const { errorType, errorDesc, statusCode } = getQueryParams();
+
+            const errorContainer = document.getElementById('errorContainer');
+            const codeElement = document.getElementById('errorCode');
+            const titleElement = document.getElementById('errorTitle');
+            const messageElement = document.getElementById('errorMessage');
+            const detailsElement = document.getElementById('errorDetails');
+
+            // Remove previous status classes
+            errorContainer.classList.remove('status-404', 'status-405', 'status-500');
+
+            // Handle different error types
+            switch (statusCode) {
+                case '404':
+                    errorContainer.classList.add('status-404');
+                    codeElement.textContent = 'Error 404';
+                    titleElement.textContent = 'Not Found';
+                    messageElement.textContent = 'The resource you are trying to access does not exist.';
+                    detailsElement.textContent = errorDesc || 'The requested endpoint or resource could not be found on this server.';
+                    break;
+
+                case '405':
+                    errorContainer.classList.add('status-405');
+                    codeElement.textContent = 'Error 405';
+                    titleElement.textContent = 'Method Not Allowed';
+                    messageElement.textContent = 'The HTTP method used is not supported for this endpoint.';
+                    detailsElement.textContent = errorDesc || 'This endpoint only accepts POST requests. Please use the correct HTTP method.';
+                    break;
+
+                case '500':
+                    errorContainer.classList.add('status-500');
+                    codeElement.textContent = 'Error 500';
+                    titleElement.textContent = 'Server Error';
+                    messageElement.textContent = 'An unexpected error occurred on the server.';
+                    detailsElement.textContent = errorDesc || 'Please try again later or contact support.';
+                    break;
+
+                default:
+                    codeElement.textContent = `Error ${statusCode}`;
+                    titleElement.textContent = errorType || 'Error';
+                    messageElement.textContent = errorDesc || 'An error occurred while processing your request.';
+                    detailsElement.textContent = `Error Type: ${errorType || 'Unknown'}`;
+            }
+        }
+
+        function goHome() {
+            window.location.href = 'http://localhost:8000/';
+        }
+
+        function goLogin() {
+            window.location.href = 'http://localhost:8000/o/authenticate';
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', initializeErrorPage);
+    </script>
+</body>
+</html>
